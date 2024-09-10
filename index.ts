@@ -2,24 +2,17 @@ import express, { Express, Request, Response, Errback } from "express";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 
+import { handleErrors } from "./utils/handleErrorsFunc";
+
 const User = require("./model/User.model");
+const { Car, Computer, Phone } = require("./model/Product.model");
+
 const app = express();
 const cors = require("cors");
 
 dotenv.config();
 app.use(express.json());
 app.use(cors());
-
-const handleErrors = (err: unknown, res: Response) => {
-	if (err instanceof Error)
-		res.status(500).json({
-			message: err.message,
-		});
-	else
-		res.status(400).json({
-			message: "unknown error",
-		});
-};
 
 mongoose
 	.connect(
@@ -32,7 +25,7 @@ mongoose
 		});
 	});
 
-app.get("/", async (req, res) => {
+app.get("/", async (res: Response) => {
 	try {
 		res.status(200).json({
 			message: "hello from server",
@@ -42,6 +35,7 @@ app.get("/", async (req, res) => {
 	}
 });
 
+//register user
 app.post("/users", async (req: Request, res: Response) => {
 	try {
 		const userExist = await User.findOne({ username: req.body.username });
@@ -60,6 +54,7 @@ app.post("/users", async (req: Request, res: Response) => {
 	}
 });
 
+//login
 app.get("/users/:username", async (req: Request, res: Response) => {
 	try {
 		const userExists = await User.findOne({ username: req.params.username });
@@ -72,6 +67,53 @@ app.get("/users/:username", async (req: Request, res: Response) => {
 				userInDatabase: true,
 				user: userExists,
 			});
+	} catch (err: unknown) {
+		handleErrors(err, res);
+	}
+});
+
+//products GET
+app.get("/products", async (req: Request, res: Response) => {
+	try {
+	} catch (err: unknown) {
+		handleErrors(err, res);
+	}
+});
+
+// car POST
+app.post("/cars/", async (req: Request, res: Response) => {
+	try {
+		const car = await Car.create(req.body);
+		res.status(200).json({
+			message: "car created",
+			car,
+		});
+	} catch (err: unknown) {
+		handleErrors(err, res);
+	}
+});
+
+//computer POST
+app.post("/computers/", async (req: Request, res: Response) => {
+	try {
+		const computer = await Computer.create(req.body);
+		res.status(200).json({
+			message: "computer created",
+			computer,
+		});
+	} catch (err: unknown) {
+		handleErrors(err, res);
+	}
+});
+
+//phone POST
+app.post("/phones/", async (req: Request, res: Response) => {
+	try {
+		const phone = await Phone.create(req.body);
+		res.status(200).json({
+			message: "phone created",
+			phone,
+		});
 	} catch (err: unknown) {
 		handleErrors(err, res);
 	}
