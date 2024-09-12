@@ -9,8 +9,7 @@ const product = new mongoose.Schema({
 	comments: [
 		{
 			content: String,
-			avatar: String,
-			username: String,
+			fromUser: { avatar: String, username: String },
 			date: String,
 		},
 	],

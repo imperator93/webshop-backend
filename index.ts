@@ -1,8 +1,9 @@
 import express, { Express, Request, Response, Errback } from "express";
 import dotenv from "dotenv";
-import mongoose from "mongoose";
+import mongoose, { Model } from "mongoose";
 
 import { handleErrors } from "./utils/handleErrorsFunc";
+import { CallTracker } from "assert";
 
 const User = require("./model/User.model");
 const { Car, Computer, Phone } = require("./model/Product.model");
@@ -62,11 +63,13 @@ app.get("/users/:username", async (req: Request, res: Response) => {
 			res.status(200).json({
 				message: "User not found",
 			});
-		else
+		else {
+			userExists.password = "";
 			res.status(200).json({
 				userInDatabase: true,
 				user: userExists,
 			});
+		}
 	} catch (err: unknown) {
 		handleErrors(err, res);
 	}
@@ -75,45 +78,103 @@ app.get("/users/:username", async (req: Request, res: Response) => {
 //products GET
 app.get("/products", async (req: Request, res: Response) => {
 	try {
-	} catch (err: unknown) {
-		handleErrors(err, res);
-	}
-});
-
-// car POST
-app.post("/cars/", async (req: Request, res: Response) => {
-	try {
-		const car = await Car.create(req.body);
+		const [cars, computers, phones] = await Promise.all([
+			Car.find().exec(),
+			Computer.find().exec(),
+			Phone.find().exec(),
+		]);
 		res.status(200).json({
-			message: "car created",
-			car,
+			message: "allProducts",
+			allProducts: [...cars, ...computers, ...phones],
 		});
 	} catch (err: unknown) {
 		handleErrors(err, res);
 	}
 });
 
-//computer POST
-app.post("/computers/", async (req: Request, res: Response) => {
+// product POST
+const modelMap: Record<string, any> = {
+	cars: Car,
+	computers: Computer,
+	phones: Phone,
+};
+
+app.post("/:type/", async (req: Request, res: Response) => {
+	const Model = modelMap[req.params.type];
+
+	if (!Model)
+		res.status(400).json({
+			message: "check your endpoints",
+		});
+
 	try {
-		const computer = await Computer.create(req.body);
+		const product = await Model.create(req.body);
 		res.status(200).json({
-			message: "computer created",
-			computer,
+			message: `${req.params.type.slice(0, -1)} created`,
+			product,
 		});
 	} catch (err: unknown) {
 		handleErrors(err, res);
 	}
 });
 
-//phone POST
-app.post("/phones/", async (req: Request, res: Response) => {
-	try {
-		const phone = await Phone.create(req.body);
-		res.status(200).json({
-			message: "phone created",
-			phone,
+//comments POST
+app.post("/:type/:id", async (req: Request, res: Response) => {
+	const Model = modelMap[req.params.type];
+	!Model &&
+		res.status(400).json({
+			message: `${req.params.type} endpoint does not exist`,
 		});
+
+	try {
+		const product = await Model.findById(req.params.id);
+		const newComment = {
+			...req.body,
+			_id: new mongoose.Types.ObjectId(),
+		};
+		product.comments.push(newComment);
+		await product.save();
+
+		res.status(200).json({
+			message: "comment added",
+			commentID: newComment._id,
+		});
+	} catch (err: unknown) {
+		handleErrors(err, res);
+	}
+});
+
+//comment DELETE  something is wrong here not getting the proper response but its works
+app.delete("/:type/:id/:commentID/", async (req: Request, res: Response) => {
+	const Model = modelMap[req.params.type];
+
+	if (!Model)
+		res.status(404).json({
+			message: `${req.params.type} endpoint doesn't exist`,
+		});
+
+	try {
+		const product = await Model.findById(req.params.id);
+		if (!product)
+			res.status(404).json({
+				message: "product not found",
+			});
+		else {
+			const indexOfcommentToDelete = product.comments.findIndex((comment: any) => comment._id == req.params.commentID);
+
+			if (indexOfcommentToDelete == -1)
+				res.status(404).json({
+					message: "comment not found",
+				});
+			else {
+				product.comments.splice(indexOfcommentToDelete, 1);
+				await product.save();
+
+				res.status(200).json({
+					message: "comment deleted",
+				});
+			}
+		}
 	} catch (err: unknown) {
 		handleErrors(err, res);
 	}

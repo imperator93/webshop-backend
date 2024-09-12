@@ -34,12 +34,19 @@ const alfaRomeoStelvio = {
 	comments: [],
 };
 
-fetch("http://localhost:3000/computers", {
-	method: "POST",
-	headers: {
-		"Content-Type": "application/json",
-	},
-	body: JSON.stringify(lenovoLegion),
+const comment = {
+	content: "comment",
+	fromUser: { avatar: "https://imgur.com/hCmLdFR.jpeg", username: "Leo" },
+	date: "sad",
+};
+
+fetch("http://localhost:3000/computers/66e0589db7e11c5719dce822/66e2bebaa1ebfa63c71ee1b1", {
+	method: "DELETE",
 })
-	.then((response) => (!response.ok ? console.log("bad request") : response.json()))
+	.then((response) => (!response.ok ? console.log(response) : response.json()))
 	.then((data) => console.log(data));
+
+// fetch("http://localhost:3000/products")
+// 	.then((response) => (!response.ok ? console.log("response ok?: ", response.ok) : response.json()))
+// 	.then((data) => console.log(data))
+// 	.catch((err) => console.log(err));
