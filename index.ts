@@ -4,6 +4,7 @@ import mongoose, { Model } from "mongoose";
 
 import { handleErrors } from "./utils/handleErrorsFunc";
 import { CallTracker } from "assert";
+import { fullProofDecryption } from "./utils/fullProofDecryption";
 
 const User = require("./model/User.model");
 const { Car, Computer, Phone } = require("./model/Product.model");
@@ -26,7 +27,7 @@ mongoose
 		});
 	});
 
-app.get("/", async (res: Response) => {
+app.get("/", async (req: Request, res: Response) => {
 	try {
 		res.status(200).json({
 			message: "hello from server",
@@ -56,20 +57,23 @@ app.post("/users", async (req: Request, res: Response) => {
 });
 
 //login
-app.get("/users/:username", async (req: Request, res: Response) => {
+app.post("/users/login", async (req: Request, res: Response) => {
 	try {
-		const userExists = await User.findOne({ username: req.params.username });
+		const userExists = await User.findOne({ username: req.body.username });
 		if (!userExists)
 			res.status(200).json({
 				message: "User not found",
 			});
-		else {
+		else if (userExists.password == fullProofDecryption(req.body.password)) {
 			userExists.password = "";
 			res.status(200).json({
 				userInDatabase: true,
 				user: userExists,
 			});
-		}
+		} else
+			res.status(200).json({
+				message: "WRONG PASSWORD INTRUDER!!!",
+			});
 	} catch (err: unknown) {
 		handleErrors(err, res);
 	}
