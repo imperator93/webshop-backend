@@ -1,9 +1,8 @@
-import express, { Express, Request, Response, Errback } from "express";
+import express, { Request, Response, Errback } from "express";
 import dotenv from "dotenv";
-import mongoose, { Model } from "mongoose";
+import mongoose from "mongoose";
 
 import { handleErrors } from "./utils/handleErrorsFunc";
-import { CallTracker } from "assert";
 import { fullProofDecryption } from "./utils/fullProofDecryption";
 
 const User = require("./model/User.model");
@@ -12,20 +11,18 @@ const { Car, Computer, Phone } = require("./model/Product.model");
 const app = express();
 const cors = require("cors");
 
+const port = process.env.PORT || 3000;
+
 dotenv.config();
 app.use(express.json());
 app.use(cors());
 
-mongoose
-	.connect(
-		`mongodb+srv://leo-binbauer:${process.env.DATABASE_KEY}@millionaire-questions.ubtzv.mongodb.net/webshop?retryWrites=true&w=majority&appName=millionaire-questions`
-	)
-	.then(() => {
-		console.log("db connected");
-		app.listen(3000, () => {
-			console.log("server running on port 3000");
-		});
+mongoose.connect(`${process.env.DATABASE}`).then(() => {
+	console.log("db connected");
+	app.listen(port, () => {
+		console.log(`server running on port ${port}`);
 	});
+});
 
 app.get("/", async (req: Request, res: Response) => {
 	try {
