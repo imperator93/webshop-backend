@@ -4,7 +4,9 @@ import mongoose from "mongoose";
 
 import { handleErrors } from "./utils/handleErrorsFunc";
 import { fullProofDecryption } from "./utils/fullProofDecryption";
+import { TrueQuestions } from "./model/TrueQuestions";
 
+const Question = require("./model/Question.model");
 const User = require("./model/User.model");
 const { Car, Computer, Phone } = require("./model/Product.model");
 
@@ -100,7 +102,7 @@ const modelMap: Record<string, any> = {
 	phones: Phone,
 };
 
-app.post("/:type/", async (req: Request, res: Response) => {
+app.post("products/:type/", async (req: Request, res: Response) => {
 	const Model = modelMap[req.params.type];
 
 	if (!Model)
@@ -176,6 +178,52 @@ app.delete("/:type/:id/:commentID/", async (req: Request, res: Response) => {
 				});
 			}
 		}
+	} catch (err: unknown) {
+		handleErrors(err, res);
+	}
+});
+
+// MILLIONAIRE
+app.get("/question", async (req: Request, res: Response) => {
+	try {
+		const questions = await Question.find({});
+		res.status(200).json({
+			questions,
+		});
+	} catch (err: unknown) {
+		handleErrors(err, res);
+	}
+});
+
+app.post("/question", async (req: Request, res: Response) => {
+	try {
+		await Question.create(req.body);
+		res.status(200).json({
+			message: "created",
+		});
+	} catch (err: unknown) {
+		handleErrors(err, res);
+	}
+});
+
+//trueQuestions
+app.get("/true-question", async (req: Request, res: Response) => {
+	try {
+		const questions = await TrueQuestions.find({});
+		res.status(200).json({
+			questions,
+		});
+	} catch (err: unknown) {
+		handleErrors(err, res);
+	}
+});
+
+app.post("/true-question", async (req: Request, res: Response) => {
+	try {
+		await TrueQuestions.create(req.body);
+		res.status(200).json({
+			message: "successfully created questions",
+		});
 	} catch (err: unknown) {
 		handleErrors(err, res);
 	}
