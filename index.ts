@@ -26,9 +26,11 @@ mongoose.connect(`${process.env.DATABASE}`).then(() => {
 	});
 });
 
+//initial server response
 app.get("/", async (req: Request, res: Response) => {
 	try {
 		res.status(200).json({
+			flag: true,
 			message: "hello from server",
 		});
 	} catch (err: unknown) {
