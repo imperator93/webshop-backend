@@ -5,6 +5,7 @@ import mongoose from "mongoose";
 import { handleErrors } from "./utils/handleErrorsFunc";
 import { fullProofDecryption } from "./utils/fullProofDecryption";
 import { TrueQuestions } from "./model/TrueQuestions";
+import { Product } from "./types/Product";
 
 const Question = require("./model/Question.model");
 const User = require("./model/User.model");
@@ -104,9 +105,8 @@ const modelMap: Record<string, any> = {
 	phones: Phone,
 };
 
-app.post("products/:type/", async (req: Request, res: Response) => {
+app.post("/products/:type", async (req: Request, res: Response) => {
 	const Model = modelMap[req.params.type];
-
 	if (!Model)
 		res.status(400).json({
 			message: "check your endpoints",
@@ -123,7 +123,63 @@ app.post("products/:type/", async (req: Request, res: Response) => {
 	}
 });
 
-//comments POST
+//USER CART
+//add item to cart
+app.post("/users/:userID/user-cart", async (req: Request, res: Response) => {
+	try {
+		const user = await User.findById(req.params.userID);
+		if (user) {
+			user.cart.push(req.body);
+			await user.save();
+			res.status(200).json({
+				message: "item added",
+				item: req.body,
+			});
+		} else
+			res.status(400).json({
+				message: "user not found",
+			});
+	} catch (err: unknown) {
+		handleErrors(err, res);
+	}
+});
+
+//delete item from cart
+app.delete("/users/:userID/user-cart/:itemID", async (req: Request, res: Response) => {
+	try {
+		const user = await User.findById(req.params.userID);
+		const item = (user.cart as { product: Product; count: number }[]).find(
+			(item) => item.product._id == req.params.itemID
+		);
+		const removedItemArr = user.cart.splice(user.cart.indexOf(item), 1);
+		res.status(200).json({
+			message: "ok",
+			item: removedItemArr,
+		});
+	} catch (err: unknown) {
+		handleErrors(err, res);
+	}
+});
+
+//update cart item count
+app.put("/users/:userID/user-cart", async (req: Request, res: Response) => {
+	try {
+		const user = await User.findById(req.params.userID);
+		if (user)
+			res.status(200).json({
+				message: "userFound",
+			});
+		else
+			res.status(400).json({
+				message: "user not found",
+			});
+	} catch (err: unknown) {
+		handleErrors(err, res);
+	}
+});
+
+// COMMENTS
+// POST
 app.post("/:type/:id", async (req: Request, res: Response) => {
 	const Model = modelMap[req.params.type];
 	!Model &&
