@@ -14,7 +14,7 @@ const { Car, Computer, Phone } = require("./model/Product.model");
 const app = express();
 const cors = require("cors");
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 4000;
 
 dotenv.config();
 app.use(express.json());
